@@ -47,7 +47,7 @@ render(
   <Router history={hashHistory}>
     <Route path="/" component={App}>
       <Route path="/processes" component={ () => <Processes busyWorkerURL="/busy_workers" workerPoolURL="/worker_pools" /> } />
-      <Route path="/queues" component={ () => <Queues url="/queues" /> } />
+      <Route path="/queues" component={ () => <Queues url="/queues" enqueueURL="/enqueue_job" /> } />
       <Route path="/retry_jobs" component={ () => <RetryJobs url="/retry_jobs" /> } />
       <Route path="/scheduled_jobs" component={ () => <ScheduledJobs url="/scheduled_jobs" /> } />
       <Route path="/dead_jobs" component={ () =>

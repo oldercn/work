@@ -6,6 +6,7 @@ import cx from './cx';
 export default class Queues extends React.Component {
   static propTypes = {
     url: PropTypes.string,
+    enqueueURL: PropTypes.string,
   }
 
   state = {
@@ -31,6 +32,15 @@ export default class Queues extends React.Component {
     return count;
   }
 
+  enqueue(job_id) {
+    if (!this.props.enqueueURL) {
+      return;
+    }
+    fetch(`${this.props.enqueueURL}/${job_id}`, {method: 'post'}).then((res) => {
+      res.ok ? alert('Execute Successful!') : alert('Execute Failed!');
+    });
+  }
+
   render() {
     return (
       <div className={cx(styles.panel, styles.panelDefault)}>
@@ -45,6 +55,7 @@ export default class Queues extends React.Component {
                 <th>Name</th>
                 <th>Count</th>
                 <th>Latency (seconds)</th>
+                <th>Action</th>
               </tr>
               {
                 this.state.queues.map((queue) => {
@@ -53,6 +64,7 @@ export default class Queues extends React.Component {
                       <td>{queue.job_name}</td>
                       <td>{queue.count}</td>
                       <td>{queue.latency}</td>
+                      <td><button type="button" className={cx(styles.btn, styles.btnDefault)} onClick={() => this.enqueue(queue.job_name)}>Execute</button></td>
                     </tr>
                   );
                 })

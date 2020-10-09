@@ -541,6 +541,48 @@ func (c *Client) deleteZsetJob(zsetKey string, zscore int64, jobID string) (bool
 	return cnt > 0, jobBytes, nil
 }
 
+// Enqueue job
+func (c *Client) EnqueueJob(jobName string) error {
+	script := redis.NewScript(2, redisLuaEnqueueUnique)
+
+	// not support passing args right now
+	jobArgs := make(map[string]interface{})
+	uniqueKey, err := redisKeyUniqueJob(c.namespace, jobName, jobArgs)
+	if err != nil {
+		logError("client.enqueue_job", err)
+		return err
+	}
+
+	job := &Job{
+		Name:       jobName,
+		ID:         uniqueKey,
+		EnqueuedAt: nowEpochSeconds(),
+		Args:       jobArgs,
+	}
+
+	rawJSON, err := job.serialize()
+	if err != nil {
+		return err
+	}
+
+	args := make([]interface{}, 0, 4)
+	args = append(args, redisKeyJobsPrefix(c.namespace)+jobName) // KEY[1]
+	args = append(args, uniqueKey)                               // KEY[2]
+	args = append(args, rawJSON)                                 // ARGV[1]
+	args = append(args, "1")
+
+	conn := c.pool.Get()
+	defer conn.Close()
+
+	_, err = script.Do(conn, args...)
+	if err != nil {
+		logError("client.enqueue_job.do", err)
+		return err
+	}
+
+	return nil
+}
+
 type jobScore struct {
 	JobBytes []byte
 	Score    int64

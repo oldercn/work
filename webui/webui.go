@@ -59,6 +59,7 @@ func NewServer(namespace string, pool *redis.Pool, hostPort string) *Server {
 	router.Post("/retry_dead_job/:died_at:\\d.*/:job_id", (*context).retryDeadJob)
 	router.Post("/delete_all_dead_jobs", (*context).deleteAllDeadJobs)
 	router.Post("/retry_all_dead_jobs", (*context).retryAllDeadJobs)
+	router.Post("/enqueue_job/:job_name", (*context).enqueueJob)
 
 	//
 	// Build the HTML page:
@@ -94,6 +95,13 @@ func (w *Server) Stop() {
 func (c *context) queues(rw web.ResponseWriter, r *web.Request) {
 	response, err := c.client.Queues()
 	render(rw, response, err)
+}
+
+func (c *context) enqueueJob(rw web.ResponseWriter, r *web.Request) {
+
+	err := c.client.EnqueueJob(r.PathParams["job_name"])
+
+	render(rw, map[string]string{"status": "ok"}, err)
 }
 
 func (c *context) workerPools(rw web.ResponseWriter, r *web.Request) {
